@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -26,6 +27,10 @@ namespace Simulation
       {
         hasHeader = value;
         PopulateDataTable();
+
+        ////If HasHeader is true, validate all files' header lines contain the same fields 
+        //if (hasHeader)
+        //  SimulationFiles.ValidateHeaders();
       } 
     }
 
@@ -63,13 +68,7 @@ namespace Simulation
       FileName = file.Name;
       FieldCount = GetFieldCount();
     }
-
-    //Create the ObservableCollection for binding
-    public static ObservableCollection<SimulationFile> CreateFiles()
-    {
-      return new ObservableCollection<SimulationFile>();
-    }
-
+    
     public void PopulateDataTable()
     {
       if (hasHeader)
@@ -77,7 +76,7 @@ namespace Simulation
       else
         PopulateTableWithNoHeader();
     }
-
+    
     #region Helper methods
     /// <summary>
     /// Populate the table when there's no header line
@@ -196,9 +195,9 @@ namespace Simulation
     /// <summary>
     /// Get the header line
     /// </summary>
-    private string GetHeaderLine()
+    public string GetHeaderLine()
     {
-      return File.ReadLines(file.FullName).Take(1).First();
+      return File.ReadLines(this.FilePath).Take(1).First();
     }
 
     /// <summary>
@@ -262,8 +261,64 @@ namespace Simulation
     /// <returns></returns>
     public static bool ValidateHeaders()
     {
+      var filesWithHeaders = Files.Where(f => f.HasHeader);
 
-      return false;
+      //Return true if no header line has been defined yet
+      if (filesWithHeaders.Count() == 0)
+        return true;
+
+      // If the header line of all existing files match that of the new file, return true
+      int distinctHeaders = filesWithHeaders.Distinct(new HeaderComparer()).Count();
+
+      //If there's more than 1 distinct headers, indicate that validation fails
+      return distinctHeaders == 1 ? true : false;
+    }
+
+    /// <summary>
+    /// Helper class for validating the headers between files are the equal
+    /// i.e. they have the same number of fields and name of each field (with all leading and trailing spaces truncated)
+    /// are the same
+    /// </summary>
+    class HeaderComparer : IEqualityComparer<SimulationFile>
+    {
+      public bool Equals(SimulationFile sf1, SimulationFile sf2)
+      {
+        string[] sf1Fields = sf1.GetHeaderLine().Split(',');
+        string[] sf2Fields = sf2.GetHeaderLine().Split(',');
+
+        if (sf1Fields.Count() != sf2Fields.Count())
+          return false;
+
+        for(int i=0; i<sf1Fields.Count(); i++)
+          if (TrimLeadingTrailingSpaces(sf1Fields[i]) != TrimLeadingTrailingSpaces(sf2Fields[i]))
+            return false;
+
+        return true;
+      }
+
+      /// <summary>
+      /// Get the hash code from a concatenated string built from each attribute 
+      /// </summary>
+      public int GetHashCode(SimulationFile obj)
+      {
+        string[] fields = obj.GetHeaderLine().Split(',');
+        string fieldString = "";
+        foreach (string field in fields)
+          fieldString += TrimLeadingTrailingSpaces(field);
+
+        int hashCode = fieldString.GetHashCode();
+        return hashCode;
+      }
+
+      private string TrimLeadingTrailingSpaces(string str)
+      {
+        while (str.StartsWith(" "))
+          str = str.TrimStart(' ');
+        while (str.EndsWith(" "))
+          str = str.TrimEnd(' ');
+
+        return str;
+      }
     }
   }
 }
