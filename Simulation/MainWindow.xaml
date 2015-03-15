@@ -1,0 +1,22 @@
+﻿<Controls:MetroWindow x:Class="Simulation.MainWindow" 
+                      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+                      xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls" 
+                      xmlns:converters="clr-namespace:Simulation.Converters" 
+                      xmlns:controls="clr-namespace:Simulation"
+                      Title="Point Sim 0.1" Width="525" Height="700" ResizeMode="CanResizeWithGrip" Background="Gray">
+    <Window.Resources>
+        <converters:CountToVisibilityConverter x:Key="CountToVisibility"/>
+    </Window.Resources>
+    <Controls:FlipView Name="FlipView" Margin="0" IsBannerEnabled="False">
+        <Controls:FlipView.Items>
+            
+            <!--  Load files for the feature  -->
+            <controls:LoadFiles/>
+
+            <!--  Merge the files  -->
+            <controls:MergeFiles/>
+
+        </Controls:FlipView.Items>
+    </Controls:FlipView>
+</Controls:MetroWindow>
