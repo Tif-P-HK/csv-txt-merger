@@ -1,7 +1,7 @@
 ﻿<UserControl x:Class="Simulation.MergeFiles"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-             xmlns:converters="clr-namespace:Simulation.Converters" >
+             xmlns:converters="clr-namespace:Simulation.Converters" Loaded="UserControl_Loaded">
     <!--  Merge files and reorganize the simulation data -->
     <Grid Background="White">
         <Grid.ColumnDefinitions>
@@ -13,7 +13,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <!--  Flip view header  -->
-        <Label Grid.Row="0">Step 2: View results and export</Label>
+        <Label Grid.Row="0">View results and export</Label>
 
         <!--  Flip view description  -->
         <Label Grid.Row="1" FontSize="11">
@@ -24,8 +24,7 @@
 
         <!--  FILES/DATA tabs  -->
         <Grid Grid.Row="2">
-            <DataGrid CanUserSortColumns="True" CanUserReorderColumns="False" Name="grdFileDataGrid" ItemsSource="{Binding Path=DefaultView, Mode=OneWay}"></DataGrid>
+            <DataGrid CanUserSortColumns="False" CanUserReorderColumns="True" Name="grdDataGrid" ItemsSource="{Binding Path=DefaultView, Mode=OneWay}"></DataGrid>
         </Grid>
-
     </Grid>
 </UserControl>
