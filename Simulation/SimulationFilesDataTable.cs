@@ -3,12 +3,12 @@
 namespace Simulation
 {
   /// <summary>
-  /// Data table which shows a selected file from the list of loaded files
+  /// Data table showing preview of data from either a simulation file or a merged file
   /// </summary>
-  public class SimulationFilesDataTable : DataTable
+  public class SimulationDataTable : DataTable
   {
     //Create a data table with a given header line
-    public SimulationFilesDataTable(string headerLine)
+    public SimulationDataTable(string headerLine)
     {
       var fields = headerLine.Split(',');
 
@@ -17,7 +17,7 @@ namespace Simulation
     }
 
     //Create a data table with no header and only the number of fields
-    public SimulationFilesDataTable(int fieldCount)
+    public SimulationDataTable(int fieldCount)
     {
       for (int i = 0; i < fieldCount; i++)
         this.Columns.Add();
