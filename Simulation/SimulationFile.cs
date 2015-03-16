@@ -17,6 +17,8 @@ namespace Simulation
     public int FieldCount { get; private set; }
     //Full file path 
     public string FilePath { get; private set; }
+    //Total number of lines (including header, if any)
+    public int TotalLineCount { get; private set; }
 
     //Indicate if the file includes a header line
     //This property is set by the UI
@@ -35,7 +37,7 @@ namespace Simulation
     }
 
     //Data table to be populated on data grid
-    public SimulationFilesDataTable DataTable { get; private set; }
+    public SimulationDataTable DataTable { get; private set; }
 
     static FileInfo file = null;
     //static int fieldCount = 0;
@@ -66,10 +68,11 @@ namespace Simulation
     {
       FilePath = file.FullName;
       FileName = file.Name;
+      TotalLineCount = GetLineCount();
       FieldCount = GetFieldCount();
     }
-    
-    public void PopulateDataTable()
+
+    private void PopulateDataTable()
     {
       if (hasHeader)
         PopulateTableWithHeader();
@@ -86,33 +89,18 @@ namespace Simulation
       StreamReader sr = new StreamReader(FilePath);
       try
       {
-        string data = "";
-        string[] dataArr = null;
-
-        data = sr.ReadLine();
-        //if (!string.IsNullOrEmpty(data))
-        //  fieldCount = data.Count(c => c == ',') + 1;
-
+        string data = sr.ReadLine();
+        
         //Create data table using the number of fields
-        DataTable = new SimulationFilesDataTable(FieldCount);
+        DataTable = new SimulationDataTable(FieldCount);
 
         //Populate the table
         while (data != null)
         {
-          //Won't trim the data line because the first/last field might just be blank
-          //data = TrimLeadingTrailingComma(data);
+          //Get the data line, validate if fields looks good and split it into string array
+          string[] dataArr = FixExtraOrMissingFields(data);
 
-          //Compare the count of fields with the first line of data
-          //If the counts don't match, skip the line
-          //TODO - Throw error if counts don't match
-          if (!ValidateNumberOfFields(data))
-          {
-            data = sr.ReadLine();
-            continue;
-          }
-
-          //create a row and add to table
-          dataArr = data.Split(',');
+          //create a row from the dataArray and add to table
           DataTable.Rows.Add((object[])dataArr);
 
           data = sr.ReadLine();
@@ -135,29 +123,27 @@ namespace Simulation
     {
       string headerLine = GetHeaderLine();
 
+      //Fields on header line must not contain leading or trailing spaces, 
+      //otherwise the corresponding column won't appear on the data grid
+      headerLine = TrimFieldsLeadingTrailingSpaces(headerLine);
+
       //Create data table
-      DataTable = new SimulationFilesDataTable(headerLine);
+      DataTable = new SimulationDataTable(headerLine);
 
       //Populate data table
       StreamReader sr = new StreamReader(FilePath);
       try
       {
+        //Read off the header line
         sr.ReadLine();
+
         string data = "";
-        string[] dataArr = null;
         while ((data = sr.ReadLine()) != null)
         {
-          //Won't trim the data line because the first/last field might just be blank
-          //data = TrimLeadingTrailingComma(data);
+          //Get the data line, validate if fields looks good and split it into string array
+          string[] dataArr = FixExtraOrMissingFields(data);
 
-          //Compare the count of fields with header
-          //If the counts don't match, skip the line
-          //TODO - Throw error if counts don't match
-          if (!ValidateNumberOfFields(data))
-            continue;
-
-          //create a row and add to table
-          dataArr = data.Split(',');
+          //create a row from the dataArray and add to table
           DataTable.Rows.Add((object[])dataArr);
         }
       }
@@ -170,7 +156,31 @@ namespace Simulation
         sr.Dispose();
       }
     }
-    
+
+    /// <summary>
+    /// Check the field count of the data line. Remove any extra and add more fields if some are missing
+    /// </summary>
+    private string[] FixExtraOrMissingFields(string data)
+    {
+      string[] dataArr = data.Split(',');
+
+      //Compare the count of fields (dataArr.Count) with the expected count
+      //difference > 0: Given line has more fields than expected. Take only up to what the field count allows
+      //difference < 0: Given line has less fields than expected. Add more empty strings to fill the space
+      //difference = 0: Field count matched. No extra action needed. 
+      int differnce = DataFieldCountCompareExpectedCount(dataArr);
+      if (differnce > 0)
+        dataArr = dataArr.Take(FieldCount).ToArray();
+      else if (differnce < 0)
+      {
+        string[] tempArr = Enumerable.Repeat("", FieldCount).ToArray();
+        for (int i = 0; i < dataArr.Count(); i++)
+          tempArr[i] = dataArr[i];
+        dataArr = tempArr;
+      }
+      return dataArr;
+    }
+
     /// <summary>
     // Validate file is either csv or txt
     /// </summary>
@@ -209,22 +219,46 @@ namespace Simulation
       return firstLine.Count(c => c == ',') + 1;
     }
 
-    private static string TrimLeadingTrailingComma(string line)
+    /// <summary>
+    /// Get the total number of lines
+    /// </summary>
+    private int GetLineCount()
     {
-      if (line.StartsWith(","))
-        line = line.TrimStart(',');
-      if (line.EndsWith(","))
-        line = line.TrimEnd(',');
-      return line;
+      return File.ReadLines(FilePath).Count();
     }
 
     /// <summary>
-    /// Validate the number of fields matches the expected count
+    /// Get each field from the header, then trim their leading and trailing spaces
+    /// </summary>
+    private string TrimFieldsLeadingTrailingSpaces(string header)
+    {
+      string outHeader = "";
+      var fields = header.Split(',');
+      string _field = "";
+      foreach (string field in fields)
+      {
+        _field = field;
+        while (_field.StartsWith(" "))
+          _field = _field.TrimStart(' ');
+        while (_field.EndsWith(" "))
+          _field = _field.TrimEnd(' ');
+
+        outHeader += _field + ",";
+      }
+      return outHeader.TrimEnd(',');
+    }
+
+    /// <summary>
+    /// Validate that the number of fields matches the expected count
     /// (which might come from the header line or the first line of data)
     /// </summary>
-    private bool ValidateNumberOfFields(string lineOfData)
+    private int DataFieldCountCompareExpectedCount(string[] dataArr)
     {
-      return (lineOfData.Count(c => c == ',') + 1 == FieldCount) ? true : false;
+      //return (lineOfData.Count(c => c == ',') + 1 == FieldCount) ? true : false;
+
+      //int countLineOfData = lineOfData.Count(c => c == ',') + 1;
+      int difference = dataArr.Count() - FieldCount;
+      return difference;
     }
     #endregion
   }
