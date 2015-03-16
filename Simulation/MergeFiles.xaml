@@ -4,16 +4,14 @@
              xmlns:converters="clr-namespace:Simulation.Converters" Loaded="UserControl_Loaded">
     <!--  Merge files and reorganize the simulation data -->
     <Grid Background="White">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
         <!--  Flip view header  -->
-        <Label Grid.Row="0">View results and export</Label>
+        <Label Grid.Row="0">View result and export</Label>
 
         <!--  Flip view description  -->
         <Label Grid.Row="1" FontSize="11">
@@ -22,9 +20,10 @@
             </TextBlock>
         </Label>
 
-        <!--  FILES/DATA tabs  -->
-        <Grid Grid.Row="2">
-            <DataGrid CanUserSortColumns="False" CanUserReorderColumns="True" Name="grdDataGrid" ItemsSource="{Binding Path=DefaultView, Mode=OneWay}"></DataGrid>
-        </Grid>
+        <!--  Data grid of merged result  -->
+        <DataGrid Grid.Row="2" CanUserSortColumns="False" CanUserReorderColumns="True" Name="grdDataGrid" ItemsSource="{Binding Path=DefaultView, Mode=OneWay}"></DataGrid>
+        
+        <!--  Export data  -->
+        <Button Grid.Row="3" HorizontalAlignment="Right" Name="btnExport" Margin="2" Click="btnExport_Click" Content=" Export " />
     </Grid>
 </UserControl>

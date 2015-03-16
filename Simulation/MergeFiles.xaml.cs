@@ -1,7 +1,10 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.ObjectModel;
 using System.Data;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -49,6 +52,64 @@ namespace Simulation
     }
 
     /// <summary>
+    /// Export the result as a csv file
+    /// </summary>
+    private void btnExport_Click(object sender, RoutedEventArgs e)
+    {
+      StringBuilder sb = ConvertTableToStringBuilder();
+
+      SaveResult(sb);
+    }
+
+    /// <summary>
+    /// Convert the data table to a string builder for save
+    /// </summary>
+    private StringBuilder ConvertTableToStringBuilder()
+    {
+      StringBuilder sb = new StringBuilder();
+
+      //Headers
+      var columnNames = FilesDataTable.Columns.Cast<DataColumn>().Select(col => col.ColumnName);
+      sb.AppendLine(string.Join(",", columnNames));
+
+      //Rows
+      foreach (DataRow row in FilesDataTable.Rows)
+        sb.AppendLine(string.Join(",", row.ItemArray));
+      return sb;
+    }
+
+    /// <summary>
+    /// Show a SaveFileDialog and save the file as .txt
+    /// </summary>
+    private async void SaveResult(StringBuilder sb)
+    {
+      SaveFileDialog dlg = new SaveFileDialog()
+      {
+        Filter = "Text Documents (*.txt)|*.txt",
+        Title = "Save the text file"
+      };
+
+      dlg.ShowDialog();
+
+      if (dlg.FileName == "")
+        return;
+
+      string filePath = dlg.FileName;
+
+      try
+      {
+        using (StreamWriter sw = new StreamWriter(filePath, false))
+        {
+          await sw.WriteAsync(sb.ToString());
+        }
+      }
+      catch (IOException)
+      {
+        MessageBox.Show("Error writing output to file. Please retry", "Error writing output", MessageBoxButton.OK, MessageBoxImage.Error);
+      }
+    }
+
+    /// <summary>
     /// Create the data table with the columns
     /// </summary>
     private void CreateDataTable()
@@ -87,7 +148,7 @@ namespace Simulation
             FilesDataTable.Rows.Add(itemArr);
           }            
       }
-      catch (Exception ex)
+      catch (Exception)
       {
       }
     }
