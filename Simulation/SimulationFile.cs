@@ -29,10 +29,6 @@ namespace Simulation
       {
         hasHeader = value;
         PopulateDataTable();
-
-        ////If HasHeader is true, validate all files' header lines contain the same fields 
-        //if (hasHeader)
-        //  SimulationFiles.ValidateHeaders();
       } 
     }
 
@@ -86,33 +82,30 @@ namespace Simulation
     /// </summary>
     private void PopulateTableWithNoHeader()
     {
-      StreamReader sr = new StreamReader(FilePath);
       try
       {
-        string data = sr.ReadLine();
-        
-        //Create data table using the number of fields
-        DataTable = new SimulationDataTable(FieldCount);
-
-        //Populate the table
-        while (data != null)
+        using (StreamReader sr = new StreamReader(FilePath))
         {
-          //Get the data line, validate if fields looks good and split it into string array
-          string[] dataArr = FixExtraOrMissingFields(data);
+          string data = sr.ReadLine();
 
-          //create a row from the dataArray and add to table
-          DataTable.Rows.Add((object[])dataArr);
+          //Create data table using the number of fields
+          DataTable = new SimulationDataTable(FieldCount);
 
-          data = sr.ReadLine();
+          //Populate the table
+          while (data != null)
+          {
+            //Get the data line, validate if fields looks good and split it into string array
+            string[] dataArr = FixExtraOrMissingFields(data);
+
+            //create a row from the dataArray and add to table
+            DataTable.Rows.Add((object[])dataArr);
+
+            data = sr.ReadLine();
+          }
         }
       }
       catch (Exception)
       {
-      }
-      finally
-      {
-        sr.Close();
-        sr.Dispose();
       }
     }
 
@@ -131,29 +124,26 @@ namespace Simulation
       DataTable = new SimulationDataTable(headerLine);
 
       //Populate data table
-      StreamReader sr = new StreamReader(FilePath);
       try
       {
-        //Read off the header line
-        sr.ReadLine();
-
-        string data = "";
-        while ((data = sr.ReadLine()) != null)
+        using (StreamReader sr = new StreamReader(FilePath))
         {
-          //Get the data line, validate if fields looks good and split it into string array
-          string[] dataArr = FixExtraOrMissingFields(data);
+          //Read off the header line
+          sr.ReadLine();
 
-          //create a row from the dataArray and add to table
-          DataTable.Rows.Add((object[])dataArr);
+          string data = "";
+          while ((data = sr.ReadLine()) != null)
+          {
+            //Get the data line, validate if fields looks good and split it into string array
+            string[] dataArr = FixExtraOrMissingFields(data);
+
+            //create a row from the dataArray and add to table
+            DataTable.Rows.Add((object[])dataArr);
+          }
         }
       }
       catch (IOException)
       {
-      }
-      finally
-      {
-        sr.Close();
-        sr.Dispose();
       }
     }
 
@@ -286,73 +276,6 @@ namespace Simulation
       int newFileFieldCount = firstLine.Count(c => c == ',') + 1;
 
       return Files.All(f => f.FieldCount == newFileFieldCount);      
-    }
-
-    /// <summary>
-    /// Get the header line of the new file 
-    /// Then compare with the rest of the files
-    /// </summary>
-    /// <returns></returns>
-    public static bool ValidateHeaders()
-    {
-      var filesWithHeaders = Files.Where(f => f.HasHeader);
-
-      //Return true if no header line has been defined yet
-      if (filesWithHeaders.Count() == 0)
-        return true;
-
-      // If the header line of all existing files match that of the new file, return true
-      int distinctHeaders = filesWithHeaders.Distinct(new HeaderComparer()).Count();
-
-      //If there's more than 1 distinct headers, indicate that validation fails
-      return distinctHeaders == 1 ? true : false;
-    }
-
-    /// <summary>
-    /// Helper class for validating the headers between files are the equal
-    /// i.e. they have the same number of fields and name of each field (with all leading and trailing spaces truncated)
-    /// are the same
-    /// </summary>
-    class HeaderComparer : IEqualityComparer<SimulationFile>
-    {
-      public bool Equals(SimulationFile sf1, SimulationFile sf2)
-      {
-        string[] sf1Fields = sf1.GetHeaderLine().Split(',');
-        string[] sf2Fields = sf2.GetHeaderLine().Split(',');
-
-        if (sf1Fields.Count() != sf2Fields.Count())
-          return false;
-
-        for(int i=0; i<sf1Fields.Count(); i++)
-          if (TrimLeadingTrailingSpaces(sf1Fields[i]) != TrimLeadingTrailingSpaces(sf2Fields[i]))
-            return false;
-
-        return true;
-      }
-
-      /// <summary>
-      /// Get the hash code from a concatenated string built from each attribute 
-      /// </summary>
-      public int GetHashCode(SimulationFile obj)
-      {
-        string[] fields = obj.GetHeaderLine().Split(',');
-        string fieldString = "";
-        foreach (string field in fields)
-          fieldString += TrimLeadingTrailingSpaces(field);
-
-        int hashCode = fieldString.GetHashCode();
-        return hashCode;
-      }
-
-      private string TrimLeadingTrailingSpaces(string str)
-      {
-        while (str.StartsWith(" "))
-          str = str.TrimStart(' ');
-        while (str.EndsWith(" "))
-          str = str.TrimEnd(' ');
-
-        return str;
-      }
     }
   }
 }

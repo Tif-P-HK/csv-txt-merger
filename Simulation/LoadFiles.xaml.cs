@@ -159,7 +159,7 @@ namespace Simulation
       OpenFileDialog dialog = new OpenFileDialog()
       {
         DefaultExt = ".csv",
-        Filter = "csv or txt file|*.csv;*.txt"
+        Filter = "CSV (Comma delimited)|*.csv|Text Documents (*.txt)|*.txt"
       };
 
       bool? dlgResult = dialog.ShowDialog();
