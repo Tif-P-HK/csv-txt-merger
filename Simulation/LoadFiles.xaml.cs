@@ -8,7 +8,7 @@ using System.Windows.Controls;
 namespace Simulation
 {
   /// <summary>
-  /// Interaction logic for LoadFiles.xaml
+  /// Allow users to add csv/txt files, and view the data of each of the file on a table
   /// </summary>
   public partial class LoadFiles : UserControl
   {
@@ -18,7 +18,7 @@ namespace Simulation
       private set { if (value != null) Simulation.SimulationFiles.Files = value; }
     }
 
-    public SimulationFilesDataTable DataTable { get; set; }
+    public SimulationDataTable DataTable { get; set; }
 
     private string filePath = "";
 
@@ -118,7 +118,10 @@ namespace Simulation
     {
       //Add file to the file list and select it
       SimulationFile sf = new SimulationFile();
-      SimulationFiles.Add(sf);
+      if (SimulationFiles.Count > 0 && sf.FieldCount > SimulationFiles[0].FieldCount)
+        SimulationFiles.Insert(0, sf);
+      else
+        SimulationFiles.Add(sf);
 
       UpdateSelectedIndexAfterAdd();
     }

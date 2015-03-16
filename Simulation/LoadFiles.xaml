@@ -17,10 +17,15 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <!--  Flip view header  -->
-        <Label Grid.Row="0">Step 1: Load files for features.</Label>
+        <Label Grid.Row="0">Load csv/txt files for features.</Label>
 
         <!--  Flip view description  -->
-        <Label Grid.Row="1" FontSize="11">One txt/csv file per feature. Header is optional.</Label>
+        <Label Grid.Row="1" FontSize="11">
+            <TextBlock TextWrapping="WrapWithOverflow">
+                One file per feature. Header is optional. 
+                If there are different headers, the one from the file at the top will be used.
+                If files have different number of lines, all extra lines will be removed from result.
+            </TextBlock></Label>
         
         <!--  FILES/DATA tabs  -->
         <Grid Grid.Row="2">
