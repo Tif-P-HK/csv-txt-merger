@@ -1,6 +1,11 @@
 ## Csv/Txt Files Merger
 A simple tool that loads multiple csv and/or txt files, merges them into one by picking one line from each source file one at a time, and exports the merged file into a txt file.
 
+###Screenshots
+![Add csv/txt files to apps](https://github.com/Tif-P-HK/csv-txt-merger/blob/master/screenshots/Files.jpg)
+![Preview a file](https://github.com/Tif-P-HK/csv-txt-merger/blob/master/screenshots/Data.jpg)
+![Merge input files into one](https://github.com/Tif-P-HK/csv-txt-merger/blob/master/screenshots/Result.jpg)
+
 ### Target users
 Those who have some simulation files to be used by the [GeoEvent Extension](http://www.esri.com/software/arcgis/arcgisserver/extensions/geoevent-extension) of [Esri](http://www.esri.com/)'s [ArcGIS for Server](http://www.esri.com/software/arcgis/arcgisserver), and those who simply want to merge a few files into one.
 
