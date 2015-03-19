@@ -119,7 +119,11 @@ namespace Simulation
 
       //Create the table based on the sf
       if (sf.HasHeader)
-        FilesDataTable = new SimulationDataTable(sf.GetHeaderLine());
+      {
+        CsvDataParser parser = new CsvDataParser(sf.FilePath);
+        string[] fields = parser.ParseHeaderLine(sf.GetHeaderLine());
+        FilesDataTable = new SimulationDataTable(fields);
+      }
       else
         FilesDataTable = new SimulationDataTable(sf.FieldCount);
     }

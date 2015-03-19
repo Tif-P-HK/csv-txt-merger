@@ -19,9 +19,7 @@ namespace Simulation
     }
 
     public SimulationDataTable DataTable { get; set; }
-
-    private string filePath = "";
-
+    
     public LoadFiles()
     {
       InitializeComponent();
@@ -75,26 +73,26 @@ namespace Simulation
     /// </summary>
     private void btnBrowseAndLoad_Click(object sender, RoutedEventArgs e)
     {
-      BrowseFile();
+      string filePath = BrowseFile();
 
       if (filePath == "")
         return;
 
       //Do some simple validation on the file before adding it to the file list
-      string validation = SimulationFile.ValidateFile(filePath);
-      if (validation != "")
+      string validation;
+      if ((validation = SimulationFile.ValidateFile(filePath)) != "")
       {
-        //File has problem. Show error
-        MessageBox.Show(validation,
-          "File has problem",
-          MessageBoxButton.OK,
-          MessageBoxImage.Exclamation);
-        filePath = "";
+        //Validate that file is a txt/csv and has at least one line 
+        ShowValidationError(validation);
+      }
+      else if((validation = SimulationFile.ValidateMalformatedData()) != "")
+      {
+        //Validate that file doesn't have malformated data
+        ShowValidationError(validation);
       }
       else
-      {
-        //Validated that file is a txt/csv and has at least one line 
-        //Now check the field count
+      {        
+        //Check the field count
         bool fieldCountMatched = Simulation.SimulationFiles.ValidateFieldCount(filePath);
         if (fieldCountMatched)
           AddSimulationFile();
@@ -112,6 +110,15 @@ namespace Simulation
             AddSimulationFile();
         }
       }
+    }
+
+    private void ShowValidationError(string validation)
+    {
+      //File has problem. Show error
+      MessageBox.Show(validation,
+        "File has problem",
+        MessageBoxButton.OK,
+        MessageBoxImage.Exclamation);
     }
 
     private void AddSimulationFile()
@@ -154,8 +161,10 @@ namespace Simulation
     /// <summary>
     /// Browse for a csv/txt file
     /// </summary>
-    private void BrowseFile()
+    private string BrowseFile()
     {
+      string filePath;
+
       OpenFileDialog dialog = new OpenFileDialog()
       {
         DefaultExt = ".csv",
@@ -167,6 +176,8 @@ namespace Simulation
         filePath = dialog.FileName;
       else
         filePath = "";
+
+      return filePath;
     }
 
     /// <summary>

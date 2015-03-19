@@ -35,11 +35,10 @@ namespace Simulation
     //Data table to be populated on data grid
     public SimulationDataTable DataTable { get; private set; }
 
-    static FileInfo file = null;
-    //static int fieldCount = 0;
+    private static FileInfo file = null;
     private bool hasHeader = false;
+    private static CsvDataParser parser = null;
 
-    #region Static methods
     /// <summary>
     /// Validate the file extension and number of lines
     /// </summary>
@@ -55,10 +54,20 @@ namespace Simulation
       if ((validation = ValidateLineCount(filePath)) != "")
         return validation;
 
+      //Validation passed. Set up the parser
+      parser = new CsvDataParser(filePath);
+
       return validation;
     }
-  
-    #endregion
+
+    /// <summary>
+    /// Validate if the file has malformated data
+    /// </summary>
+    public static string ValidateMalformatedData()
+    {
+      long lineWithError = parser.TryToParseFile();
+      return lineWithError > 0 ? string.Format("Line {0} has some invalid data. File cannot be used.", lineWithError) : "";
+    }
 
     public SimulationFile()
     {
@@ -68,6 +77,9 @@ namespace Simulation
       FieldCount = GetFieldCount();
     }
 
+    /// <summary>
+    /// Populate the data table from the input csv
+    /// </summary>
     private void PopulateDataTable()
     {
       if (hasHeader)
@@ -84,24 +96,21 @@ namespace Simulation
     {
       try
       {
-        using (StreamReader sr = new StreamReader(FilePath))
+        //Create data table using the number of fields
+        DataTable = new SimulationDataTable(FieldCount);
+
+        //Parse the data
+        List<string[]> dataRows = parser.ParseFile();
+        if (dataRows == null)
+          return;
+
+        for (int i = 0; i < dataRows.Count; i++)
         {
-          string data = sr.ReadLine();
+          //For each row, validate if fields looks good
+          string[] dataArr = FixExtraOrMissingFields(dataRows[i]);
 
-          //Create data table using the number of fields
-          DataTable = new SimulationDataTable(FieldCount);
-
-          //Populate the table
-          while (data != null)
-          {
-            //Get the data line, validate if fields looks good and split it into string array
-            string[] dataArr = FixExtraOrMissingFields(data);
-
-            //create a row from the dataArray and add to table
-            DataTable.Rows.Add((object[])dataArr);
-
-            data = sr.ReadLine();
-          }
+          //create a row from the dataArray and add to table
+          DataTable.Rows.Add(dataArr);
         }
       }
       catch (Exception)
@@ -120,27 +129,31 @@ namespace Simulation
       //otherwise the corresponding column won't appear on the data grid
       headerLine = TrimFieldsLeadingTrailingSpaces(headerLine);
 
-      //Create data table
-      DataTable = new SimulationDataTable(headerLine);
-
       //Populate data table
       try
       {
-        using (StreamReader sr = new StreamReader(FilePath))
+        //Create data table
+        string[] fields = parser.ParseHeaderLine(headerLine);
+        DataTable = new SimulationDataTable(fields);
+
+        //Parse the data
+        List<string[]> dataRows = parser.ParseFile();
+        if (dataRows == null)
+          return;
+
+        for (int i = 0; i < dataRows.Count;i++ )
         {
-          //Read off the header line
-          sr.ReadLine();
+          //skip the first line (header line)
+          if (i == 0) 
+            continue;
 
-          string data = "";
-          while ((data = sr.ReadLine()) != null)
-          {
-            //Get the data line, validate if fields looks good and split it into string array
-            string[] dataArr = FixExtraOrMissingFields(data);
+          //For each row, validate if fields looks good
+          string[] dataArr = FixExtraOrMissingFields(dataRows[i]);
 
-            //create a row from the dataArray and add to table
-            DataTable.Rows.Add((object[])dataArr);
-          }
+          //create a row from the dataArray and add to table
+          DataTable.Rows.Add(dataArr);
         }
+
       }
       catch (IOException)
       {
@@ -150,25 +163,23 @@ namespace Simulation
     /// <summary>
     /// Check the field count of the data line. Remove any extra and add more fields if some are missing
     /// </summary>
-    private string[] FixExtraOrMissingFields(string data)
+    private string[] FixExtraOrMissingFields(string[] rowDataArray)
     {
-      string[] dataArr = data.Split(',');
-
       //Compare the count of fields (dataArr.Count) with the expected count
       //difference > 0: Given line has more fields than expected. Take only up to what the field count allows
       //difference < 0: Given line has less fields than expected. Add more empty strings to fill the space
       //difference = 0: Field count matched. No extra action needed. 
-      int differnce = DataFieldCountCompareExpectedCount(dataArr);
+      int differnce = DataFieldCountCompareExpectedCount(rowDataArray);
       if (differnce > 0)
-        dataArr = dataArr.Take(FieldCount).ToArray();
+        rowDataArray = rowDataArray.Take(FieldCount).ToArray();
       else if (differnce < 0)
       {
         string[] tempArr = Enumerable.Repeat("", FieldCount).ToArray();
-        for (int i = 0; i < dataArr.Count(); i++)
-          tempArr[i] = dataArr[i];
-        dataArr = tempArr;
+        for (int i = 0; i < rowDataArray.Count(); i++)
+          tempArr[i] = rowDataArray[i];
+        rowDataArray = tempArr;
       }
-      return dataArr;
+      return rowDataArray;
     }
 
     /// <summary>
@@ -206,7 +217,8 @@ namespace Simulation
     private int GetFieldCount()
     {
       string firstLine = File.ReadLines(FilePath).Take(1).First();
-      return firstLine.Count(c => c == ',') + 1;
+      string[] fields = parser.ParseHeaderLine(firstLine);
+      return fields.Count();
     }
 
     /// <summary>
@@ -244,9 +256,6 @@ namespace Simulation
     /// </summary>
     private int DataFieldCountCompareExpectedCount(string[] dataArr)
     {
-      //return (lineOfData.Count(c => c == ',') + 1 == FieldCount) ? true : false;
-
-      //int countLineOfData = lineOfData.Count(c => c == ',') + 1;
       int difference = dataArr.Count() - FieldCount;
       return difference;
     }
