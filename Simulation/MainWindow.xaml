@@ -4,7 +4,7 @@
                       xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls" 
                       xmlns:converters="clr-namespace:Simulation.Converters" 
                       xmlns:controls="clr-namespace:Simulation"
-                      Title="Point Sim 0.1" Width="525" Height="700" ResizeMode="CanResizeWithGrip" Background="Gray">
+                      Title="Sim.mer 0.1" WindowStartupLocation="CenterScreen" WindowState="Maximized" ResizeMode="CanResizeWithGrip" Background="Gray">
     <Window.Resources>
         <converters:CountToVisibilityConverter x:Key="CountToVisibility"/>
     </Window.Resources>
