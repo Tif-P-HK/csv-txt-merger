@@ -8,10 +8,8 @@ namespace Simulation
   public class SimulationDataTable : DataTable
   {
     //Create a data table with a given header line
-    public SimulationDataTable(string headerLine)
+    public SimulationDataTable(string[] fields)
     {
-      var fields = headerLine.Split(',');
-
       foreach (string field in fields)
         this.Columns.Add(field);
     }
