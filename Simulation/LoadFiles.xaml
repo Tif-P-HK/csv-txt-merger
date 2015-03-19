@@ -23,8 +23,8 @@
         <Label Grid.Row="1" FontSize="11">
             <TextBlock TextWrapping="WrapWithOverflow">
                 One file per feature. Header is optional. 
-                If there are different headers, the one from the file at the top will be used.
-                If files have different number of lines, all extra lines will be removed from result.
+                If files have different headers, the header of the file at the top will be used.
+                If files have different number of lines, the one with the least lines will be used when merging.
             </TextBlock></Label>
         
         <!--  FILES/DATA tabs  -->
