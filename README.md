@@ -14,9 +14,8 @@ Those who have some simulation files to be used by the [GeoEvent Extension](http
 4. When all files are in place, merge them into one and the output will be shown on the result page
 5. Export the merged file as needed.
 
-### (For Dev) How to run the app
-1. Install [MahApps.Metro](http://mahapps.com/) from NuGet into Visual Studio
-2. Clone, compile, run.
+### Credit
+[MahApps.Metro](http://mahapps.com/)
 
 ### License
 The MIT License (MIT)
